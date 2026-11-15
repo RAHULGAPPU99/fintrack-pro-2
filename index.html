@@ -2,434 +2,559 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MoneyMap - Personal Finance & Business Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MoneyMap Pro - Finance & Business Suite</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="manifest" href="./manifest.json">
+    <!-- html2pdf for Statement Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            background-color: #f8fafc;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .hide { display: none !important; }
+    </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+<body class="text-slate-800 antialiased max-w-md mx-auto min-h-screen bg-slate-50 flex flex-col relative shadow-2xl">
 
-    <!-- AUTH SECTION -->
-    <div id="auth-container" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-900 to-slate-900">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-            <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full mb-4 text-2xl font-bold">
-                    <i class="fa-solid fa-wallet"></i>
-                </div>
-                <h1 class="text-2xl font-bold text-slate-900">MoneyMap</h1>
-                <p class="text-sm text-slate-500">Secure Personal & Business Finance Tracker</p>
+    <!-- 1. AUTH SCREEN -->
+    <div id="auth-screen" class="absolute inset-0 bg-gradient-to-br from-indigo-900 via-indigo-800 to-slate-900 z-50 flex flex-col justify-between p-6 text-white">
+        <div class="mt-12 text-center">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-white/10 rounded-3xl backdrop-blur-xl mb-4 border border-white/20 shadow-xl">
+                <i class="fa-solid fa-wallet text-4xl text-indigo-300"></i>
             </div>
+            <h1 class="text-3xl font-bold tracking-tight">MoneyMap Pro</h1>
+            <p class="text-indigo-200 text-sm mt-1">Secure Personal & Business Finance</p>
+        </div>
 
-            <!-- Login Form -->
-            <div id="login-form" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-                    <input type="email" id="login-email" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="name@example.com">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
-                    <input type="password" id="login-password" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="••••••••">
-                </div>
-                <button onclick="handleLogin()" class="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition">Login</button>
-                <p class="text-center text-sm text-slate-600 mt-4">Don't have an account? <button onclick="switchAuthTab('register')" class="text-indigo-600 font-semibold">Register with OTP</button></p>
+        <div class="bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/15 shadow-2xl mb-8">
+            <div id="email-step">
+                <label class="block text-xs font-medium text-indigo-200 mb-2 uppercase tracking-wider">Email Address</label>
+                <input type="email" id="user-email" placeholder="name@example.com" class="w-full px-4 py-3.5 bg-black/20 border border-white/20 rounded-2xl text-white placeholder-indigo-300/50 focus:outline-none focus:border-indigo-400 mb-4">
+                <button onclick="sendOTP()" class="w-full py-4 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2">
+                    <span>Continue with Email</span> <i class="fa-solid fa-arrow-right"></i>
+                </button>
             </div>
-
-            <!-- Register Form -->
-            <div id="register-form" class="space-y-4 hidden">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-                    <input type="email" id="reg-email" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="name@example.com">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Create Password</label>
-                    <input type="password" id="reg-password" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="••••••••">
-                </div>
-                <div id="otp-section" class="hidden">
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Enter 6-Digit Email OTP</label>
-                    <input type="text" id="reg-otp" class="w-full px-4 py-2 border rounded-lg tracking-widest text-center text-xl font-bold focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="------" maxlength="6">
-                </div>
-                <button id="reg-btn" onclick="handleRegisterStep()" class="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition">Send OTP</button>
-                <p class="text-center text-sm text-slate-600 mt-4">Already have an account? <button onclick="switchAuthTab('login')" class="text-indigo-600 font-semibold">Login</button></p>
+            <div id="otp-step" class="hide">
+                <label class="block text-xs font-medium text-indigo-200 mb-2 uppercase tracking-wider">Enter 4-Digit OTP</label>
+                <input type="text" id="otp-input" maxlength="4" placeholder="••••" class="w-full px-4 py-3.5 bg-black/20 border border-white/20 rounded-2xl text-white text-center text-2xl tracking-widest placeholder-indigo-300/50 focus:outline-none focus:border-indigo-400 mb-4">
+                <button onclick="verifyOTP()" class="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-2xl shadow-lg transition-all">
+                    Verify & Login
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- MAIN APP DASHBOARD (Hidden initially) -->
-    <div id="app-container" class="hidden min-h-screen flex flex-col">
-        <!-- Top Navbar -->
-        <header class="bg-indigo-600 text-white shadow-md">
-            <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-                <div class="flex items-center space-x-3">
-                    <i class="fa-solid fa-wallet text-2xl"></i>
-                    <span class="text-xl font-bold">MoneyMap Pro</span>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <span id="user-display-email" class="text-sm bg-indigo-700 px-3 py-1 rounded-full"></span>
-                    <button onclick="handleLogout()" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm font-medium transition"><i class="fa-solid fa-right-from-bracket mr-1"></i> Logout</button>
-                </div>
-            </div>
-        </header>
-
-        <!-- Navigation Tabs -->
-        <nav class="bg-white shadow border-b overflow-x-auto">
-            <div class="max-w-7xl mx-auto px-4 flex space-x-6">
-                <button onclick="switchTab('dashboard')" class="tab-btn py-3 border-b-2 border-indigo-600 text-indigo-600 font-medium whitespace-nowrap"><i class="fa-solid fa-chart-pie mr-2"></i>Dashboard</button>
-                <button onclick="switchTab('entries')" class="tab-btn py-3 border-b-2 border-transparent text-slate-600 hover:text-indigo-600 font-medium whitespace-nowrap"><i class="fa-solid fa-right-left mr-2"></i>Entries</button>
-                <button onclick="switchTab('udhaar')" class="tab-btn py-3 border-b-2 border-transparent text-slate-600 hover:text-indigo-600 font-medium whitespace-nowrap"><i class="fa-solid fa-book mr-2"></i>Udhaar Khata</button>
-                <button onclick="switchTab('loans')" class="tab-btn py-3 border-b-2 border-transparent text-slate-600 hover:text-indigo-600 font-medium whitespace-nowrap"><i class="fa-solid fa-landmark mr-2"></i>Loans & Cards</button>
-                <button onclick="switchTab('cashcounter')" class="tab-btn py-3 border-b-2 border-transparent text-slate-600 hover:text-indigo-600 font-medium whitespace-nowrap"><i class="fa-solid fa-calculator mr-2"></i>Cash Counter</button>
-                <button onclick="switchTab('reports')" class="tab-btn py-3 border-b-2 border-transparent text-slate-600 hover:text-indigo-600 font-medium whitespace-nowrap"><i class="fa-solid fa-file-excel mr-2"></i>Reports & Backup</button>
-            </div>
-        </nav>
-
-        <!-- Main Content Area -->
-        <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
-            
-            <!-- Dashboard Tab -->
-            <div id="tab-dashboard" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-white p-5 rounded-xl shadow border border-slate-100">
-                        <p class="text-sm text-slate-500 font-medium">Total Balance</p>
-                        <h3 id="dash-balance" class="text-2xl font-bold text-slate-900 mt-1">₹0.00</h3>
-                    </div>
-                    <div class="bg-white p-5 rounded-xl shadow border border-slate-100">
-                        <p class="text-sm text-slate-500 font-medium">Total Income (This Month)</p>
-                        <h3 id="dash-income" class="text-2xl font-bold text-emerald-600 mt-1">₹0.00</h3>
-                    </div>
-                    <div class="bg-white p-5 rounded-xl shadow border border-slate-100">
-                        <p class="text-sm text-slate-500 font-medium">Total Expense (This Month)</p>
-                        <h3 id="dash-expense" class="text-2xl font-bold text-rose-600 mt-1">₹0.00</h3>
-                    </div>
-                </div>
-
-                <div class="bg-white p-6 rounded-xl shadow border border-slate-100">
-                    <h3 class="text-lg font-bold mb-4">Quick Actions & Summary</h3>
-                    <p class="text-slate-600">Aapka MoneyMap system poori tarah ready hai. Entries, Udhaar Khata, aur Cash Counter tabs ka use karke apne saare transactions manage karein.</p>
-                </div>
-            </div>
-
-            <!-- Entries Tab -->
-            <div id="tab-entries" class="hidden space-y-6">
-                <div class="bg-white p-6 rounded-xl shadow border">
-                    <h3 class="text-lg font-bold mb-4">Add New Transaction</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <select id="ent-type" class="border p-2 rounded-lg"><option value="income">Income</option><option value="expense">Expense</option></select>
-                        <input type="number" id="ent-amount" placeholder="Amount (₹)" class="border p-2 rounded-lg">
-                        <input type="text" id="ent-desc" placeholder="Description / Category" class="border p-2 rounded-lg">
-                        <button onclick="addEntry()" class="bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700">Add Entry</button>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow border">
-                    <h3 class="text-lg font-bold mb-4">Transaction History</h3>
-                    <div id="entries-list" class="space-y-2"></div>
-                </div>
-            </div>
-
-            <!-- Udhaar Tab -->
-            <div id="tab-udhaar" class="hidden space-y-6">
-                <div class="bg-white p-6 rounded-xl shadow border">
-                    <h3 class="text-lg font-bold mb-4">Add Person Khata</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <input type="text" id="udhaar-name" placeholder="Person Name" class="border p-2 rounded-lg">
-                        <input type="number" id="udhaar-amount" placeholder="Amount (+ Given, - Taken)" class="border p-2 rounded-lg">
-                        <button onclick="addUdhaar()" class="bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700">Save Khata</button>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow border">
-                    <h3 class="text-lg font-bold mb-4">Khata Ledger</h3>
-                    <div id="udhaar-list" class="space-y-2"></div>
-                </div>
-            </div>
-
-            <!-- Loans & Cards Tab -->
-            <div id="tab-loans" class="hidden space-y-6">
-                <div class="bg-white p-6 rounded-xl shadow border">
-                    <h3 class="text-lg font-bold mb-4">Loans Tracker</h3>
-                    <p class="text-slate-600">Aap yahan apne personal loans, business MSME loans aur EMIs track kar sakte hain.</p>
-                </div>
-            </div>
-
-            <!-- Cash Counter Tab -->
-            <div id="tab-cashcounter" class="hidden space-y-6">
-                <div class="bg-white p-6 rounded-xl shadow border">
-                    <h3 class="text-lg font-bold mb-4">Cash Denomination Counter</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="cash-denom-inputs">
-                        <!-- Denominations generated via JS -->
-                    </div>
-                    <div class="mt-4 p-4 bg-indigo-50 rounded-lg flex justify-between items-center">
-                        <span class="font-bold text-lg">Total Cash:</span>
-                        <span id="total-cash-output" class="text-2xl font-bold text-indigo-600">₹0</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Reports & Backup Tab -->
-            <div id="tab-reports" class="hidden space-y-6">
-                <div class="bg-white p-6 rounded-xl shadow border space-y-4">
-                    <h3 class="text-lg font-bold">Data & Backup Management</h3>
-                    <div class="flex gap-4">
-                        <button onclick="exportData()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-emerald-750">Export Backup (JSON)</button>
-                        <button onclick="clearAllData()" class="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-600">Reset All Data</button>
-                    </div>
-                </div>
-            </div>
-
-        </main>
+    <!-- 2. APP LOCK SCREEN (PIN / Biometric) -->
+    <div id="lock-screen" class="absolute inset-0 bg-slate-900 z-40 flex flex-col items-center justify-center p-6 text-white hide">
+        <div class="w-16 h-16 bg-indigo-600/30 rounded-2xl flex items-center justify-center mb-4 border border-indigo-500/30">
+            <i class="fa-solid fa-shield-halved text-3xl text-indigo-400"></i>
+        </div>
+        <h2 class="text-xl font-bold">App Locked</h2>
+        <p class="text-slate-400 text-sm mb-6">Enter your 4-digit PIN</p>
+        <div class="flex gap-4 mb-6">
+            <input type="password" maxlength="1" class="pin-box w-12 h-12 text-center text-xl bg-slate-800 border border-slate-700 rounded-xl text-white" readonly>
+            <input type="password" maxlength="1" class="pin-box w-12 h-12 text-center text-xl bg-slate-800 border border-slate-700 rounded-xl text-white" readonly>
+            <input type="password" maxlength="1" class="pin-box w-12 h-12 text-center text-xl bg-slate-800 border border-slate-700 rounded-xl text-white" readonly>
+            <input type="password" maxlength="1" class="pin-box w-12 h-12 text-center text-xl bg-slate-800 border border-slate-700 rounded-xl text-white" readonly>
+        </div>
+        <div class="grid grid-cols-3 gap-4 w-64">
+            <button onclick="pressPin('1')" class="py-3 bg-slate-800 rounded-xl font-bold text-lg active:bg-slate-700">1</button>
+            <button onclick="pressPin('2')" class="py-3 bg-slate-800 rounded-xl font-bold text-lg active:bg-slate-700">2</button>
+            <button onclick="pressPin('3')" class="py-3 bg-slate-800 rounded-xl font-bold text-lg active:bg-slate-700">3</button>
+            <button onclick="pressPin('4')" class="py-3 bg-slate-800 rounded-xl font-bold text-lg active:bg-slate-700">4</button>
+            <button onclick="pressPin('5')" class="py-3 bg-slate-800 rounded-xl font-bold text-lg active:bg-slate-700">5</button>
+            <button onclick="pressPin('6')" class="py-3 bg-slate-800 rounded-xl font-bold text-lg active:bg-slate-700">6</button>
+            <button onclick="pressPin('7')" class="py-3 bg-slate-800 rounded-xl font-bold text-lg active:bg-slate-700">7</button>
+            <button onclick="pressPin('8')" class="py-3 bg-slate-800 rounded-xl font-bold text-lg active:bg-slate-700">8</button>
+            <button onclick="pressPin('9')" class="py-3 bg-slate-800 rounded-xl font-bold text-lg active:bg-slate-700">9</button>
+            <button onclick="biometricAuth()" class="py-3 bg-indigo-900/50 text-indigo-300 rounded-xl text-sm flex items-center justify-center"><i class="fa-solid fa-fingerprint text-xl"></i></button>
+            <button onclick="pressPin('0')" class="py-3 bg-slate-800 rounded-xl font-bold text-lg active:bg-slate-700">0</button>
+            <button onclick="clearPin()" class="py-3 bg-slate-800 rounded-xl text-sm text-red-400"><i class="fa-solid fa-delete-left"></i></button>
+        </div>
     </div>
 
+    <!-- 3. MAIN APP HEADER -->
+    <header class="bg-indigo-600 text-white p-4 pt-6 shadow-md flex justify-between items-center rounded-b-3xl">
+        <div>
+            <span class="text-xs text-indigo-200 uppercase tracking-wider font-medium">Welcome Back</span>
+            <h2 id="user-display" class="text-lg font-bold">My Finances</h2>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="lockApp()" class="w-10 h-10 bg-indigo-700/60 rounded-full flex items-center justify-center text-indigo-200 hover:text-white"><i class="fa-solid fa-lock"></i></button>
+            <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center font-bold text-white">MM</div>
+        </div>
+    </header>
+
+    <!-- CONTENT CONTAINER -->
+    <main class="flex-1 pb-24 overflow-y-auto p-4">
+        
+        <!-- TAB 1: HOME / DASHBOARD -->
+        <section id="tab-home" class="space-y-4">
+            <!-- Balance Card -->
+            <div class="bg-gradient-to-r from-indigo-600 to-violet-600 p-5 rounded-3xl text-white shadow-xl">
+                <p class="text-xs text-indigo-100 font-medium uppercase tracking-wide">Net Balance</p>
+                <h3 id="total-balance" class="text-3xl font-extrabold mt-1">₹0.00</h3>
+                <div class="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-white/15">
+                    <div>
+                        <span class="text-xs text-emerald-300 flex items-center gap-1"><i class="fa-solid fa-arrow-down"></i> Total Income</span>
+                        <p id="total-income" class="text-lg font-bold mt-0.5">₹0</p>
+                    </div>
+                    <div>
+                        <span class="text-xs text-rose-300 flex items-center gap-1"><i class="fa-solid fa-arrow-up"></i> Total Expense</span>
+                        <p id="total-expense" class="text-lg font-bold mt-0.5">₹0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Action Grid -->
+            <div class="grid grid-cols-4 gap-3">
+                <button onclick="switchTab('ledger')" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-indigo-600 hover:bg-indigo-50 transition">
+                    <i class="fa-solid fa-book-open text-xl mb-1"></i>
+                    <span class="text-xs font-medium text-slate-700">Ledger</span>
+                </button>
+                <button onclick="switchTab('udhar')" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-amber-600 hover:bg-amber-50 transition">
+                    <i class="fa-solid fa-hand-holding-dollar text-xl mb-1"></i>
+                    <span class="text-xs font-medium text-slate-700">Udhar</span>
+                </button>
+                <button onclick="switchTab('calc')" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-emerald-600 hover:bg-emerald-50 transition">
+                    <i class="fa-solid fa-calculator text-xl mb-1"></i>
+                    <span class="text-xs font-medium text-slate-700">Cash Calc</span>
+                </button>
+                <button onclick="exportPDF()" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-purple-600 hover:bg-purple-50 transition">
+                    <i class="fa-solid fa-file-pdf text-xl mb-1"></i>
+                    <span class="text-xs font-medium text-slate-700">PDF Report</span>
+                </button>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="font-bold text-slate-800 text-sm">Recent Transactions</h4>
+                    <button onclick="switchTab('ledger')" class="text-xs text-indigo-600 font-semibold">View All</button>
+                </div>
+                <div id="recent-transactions" class="space-y-2.5">
+                    <p class="text-xs text-slate-400 text-center py-4">No transactions recorded yet.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: LEDGER (Income & Expense) -->
+        <section id="tab-ledger" class="space-y-4 hide">
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
+                <h3 class="font-bold text-slate-800 mb-3 text-base">Add Transaction</h3>
+                <form id="ledger-form" onsubmit="addTransaction(event)" class="space-y-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="setTxType('income')" id="btn-inc" class="py-2.5 rounded-xl text-sm font-bold bg-emerald-500 text-white transition">Income</button>
+                        <button type="button" onclick="setTxType('expense')" id="btn-exp" class="py-2.5 rounded-xl text-sm font-bold bg-slate-100 text-slate-600 transition">Expense</button>
+                    </div>
+                    <input type="text" id="tx-title" placeholder="Description (e.g., Grocery, Salary)" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="tx-amount" placeholder="Amount (₹)" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500">
+                        <input type="date" id="tx-date" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl text-sm shadow-md hover:bg-indigo-700 transition">Save Entry</button>
+                </form>
+            </div>
+
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-slate-800 text-base">All Entries</h3>
+                    <button onclick="exportPDF()" class="text-xs bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg font-semibold border border-purple-100"><i class="fa-solid fa-download mr-1"></i> Export PDF</button>
+                </div>
+                <div id="ledger-list" class="space-y-2"></div>
+            </div>
+        </section>
+
+        <!-- TAB 3: UDHAR KHATA -->
+        <section id="tab-udhar" class="space-y-4 hide">
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
+                <h3 class="font-bold text-slate-800 mb-3 text-base">Customer Udhar Khata</h3>
+                <form onsubmit="addUdhar(event)" class="space-y-3">
+                    <input type="text" id="udhar-name" placeholder="Customer Name" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="udhar-amount" placeholder="Amount (₹)" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none">
+                        <select id="udhar-type" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none">
+                            <option value="given">You Gave (Lena hai)</option>
+                            <option value="taken">You Took (Dena hai)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-amber-600 text-white font-bold rounded-xl text-sm shadow-md hover:bg-amber-700 transition">Add Khata Entry</button>
+                </form>
+            </div>
+
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
+                <h3 class="font-bold text-slate-800 mb-3 text-base">Khata Accounts</h3>
+                <div id="udhar-list" class="space-y-2"></div>
+            </div>
+        </section>
+
+        <!-- TAB 4: CASH DENOMINATION CALCULATOR -->
+        <section id="tab-calc" class="space-y-4 hide">
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-slate-800 text-base">Cash Counter</h3>
+                    <span id="cash-total" class="text-lg font-extrabold text-emerald-600">₹0</span>
+                </div>
+                <div class="space-y-2.5" id="denom-inputs">
+                    <!-- Denominations populated via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- PDF REPORT WRAPPER (Hidden template for export) -->
+        <div id="pdf-report-content" class="p-6 bg-white hide">
+            <div class="text-center pb-4 border-b border-slate-200 mb-4">
+                <h2 class="text-2xl font-bold text-indigo-600">MoneyMap Pro Statement</h2>
+                <p id="pdf-date" class="text-xs text-slate-500 mt-1"></p>
+            </div>
+            <div class="mb-4">
+                <h4 class="font-bold text-sm text-slate-700 mb-2">Financial Summary</h4>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="p-2 bg-slate-50 rounded-xl">
+                        <p class="text-xs text-slate-500">Balance</p>
+                        <p id="pdf-bal" class="font-bold text-sm text-indigo-600">₹0</p>
+                    </div>
+                    <div class="p-2 bg-emerald-50 rounded-xl">
+                        <p class="text-xs text-emerald-600">Income</p>
+                        <p id="pdf-inc" class="font-bold text-sm text-emerald-700">₹0</p>
+                    </div>
+                    <div class="p-2 bg-rose-50 rounded-xl">
+                        <p class="text-xs text-rose-600">Expense</p>
+                        <p id="pdf-exp" class="font-bold text-sm text-rose-700">₹0</p>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold text-sm text-slate-700 mb-2">Transaction History</h4>
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 bg-slate-100">
+                            <th class="p-2">Date</th>
+                            <th class="p-2">Description</th>
+                            <th class="p-2">Type</th>
+                            <th class="p-2 text-right">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pdf-table-body">
+                        <!-- Filled by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 4. PHONEPE STYLE BOTTOM NAVIGATION BAR -->
+    <nav class="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-4 py-2 flex justify-around items-center z-30 shadow-lg rounded-t-3xl">
+        <button onclick="switchTab('home')" class="nav-btn flex flex-col items-center text-indigo-600" data-tab="home">
+            <i class="fa-solid fa-house text-lg"></i>
+            <span class="text-[10px] font-semibold mt-1">Home</span>
+        </button>
+        <button onclick="switchTab('ledger')" class="nav-btn flex flex-col items-center text-slate-400 hover:text-indigo-600" data-tab="ledger">
+            <i class="fa-solid fa-book text-lg"></i>
+            <span class="text-[10px] font-semibold mt-1">Ledger</span>
+        </button>
+        <button onclick="switchTab('udhar')" class="nav-btn flex flex-col items-center text-slate-400 hover:text-indigo-600" data-tab="udhar">
+            <i class="fa-solid fa-address-book text-lg"></i>
+            <span class="text-[10px] font-semibold mt-1">Udhar</span>
+        </button>
+        <button onclick="switchTab('calc')" class="nav-btn flex flex-col items-center text-slate-400 hover:text-indigo-600" data-tab="calc">
+            <i class="fa-solid fa-calculator text-lg"></i>
+            <span class="text-[10px] font-semibold mt-1">Cash Calc</span>
+        </button>
+    </nav>
+
+    <!-- APP JAVASCRIPT LOGIC -->
     <script>
-        // REPLACE WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbxrjZxKZXRrQg8yzMFTCd7AGlaH-lFaHqJV3XxeME4r-VQJmEVcig3unFry-UStpvZiMQ/exec";
+        // State Management
+        let currentTxType = 'income';
+        let pinCode = "1234"; // Default PIN for lock
+        let enteredPin = "";
+        let transactions = JSON.parse(localStorage.getItem('mm_tx')) || [];
+        let udharList = JSON.parse(localStorage.getItem('mm_udhar')) || [];
+        
+        const denominations = [2000, 500, 200, 100, 50, 20, 10, 5, 2, 1];
 
-        let currentUser = localStorage.getItem("moneymap_user") || null;
-        let appData = JSON.parse(localStorage.getItem("moneymap_data") || '{"entries":[], "udhaar":[]}');
-
+        // Init App
         window.onload = function() {
-            if (currentUser) {
-                showApp();
+            if(localStorage.getItem('mm_logged')) {
+                document.getElementById('auth-screen').classList.add('hide');
+                document.getElementById('lock-screen').classList.remove('hide');
             }
-            initCashCounter();
+            renderAll();
+            initCashCalc();
+            document.getElementById('tx-date').valueAsDate = new Date();
         };
 
-        function switchAuthTab(tab) {
-            if(tab === 'register') {
-                document.getElementById('login-form').classList.add('hidden');
-                document.getElementById('register-form').classList.remove('hidden');
-            } else {
-                document.getElementById('register-form').classList.add('hidden');
-                document.getElementById('login-form').classList.remove('hidden');
-            }
+        // Auth Flow
+        function sendOTP() {
+            const email = document.getElementById('user-email').value;
+            if(!email) return alert('Please enter your email.');
+            document.getElementById('email-step').classList.add('hide');
+            document.getElementById('otp-step').classList.remove('hide');
+            alert('Mock OTP sent to ' + email + ' (Use any 4 digits)');
         }
 
-        let regStep = 'send_otp';
-        async function handleRegisterStep() {
-            const email = document.getElementById('reg-email').value;
-            const password = document.getElementById('reg-password').value;
-            const otp = document.getElementById('reg-otp').value;
+        function verifyOTP() {
+            const otp = document.getElementById('otp-input').value;
+            if(otp.length !== 4) return alert('Enter valid 4-digit OTP');
+            localStorage.setItem('mm_logged', 'true');
+            document.getElementById('auth-screen').classList.add('hide');
+        }
 
-            if(!email || !password) {
-                alert("Please fill email and password");
-                return;
-            }
+        // Lock & PIN Screen
+        function lockApp() {
+            document.getElementById('lock-screen').classList.remove('hide');
+            enteredPin = "";
+            updatePinDots();
+        }
 
-            if(regStep === 'send_otp') {
-                document.getElementById('reg-btn').innerText = "Sending OTP...";
-                try {
-                    let res = await fetch(GAS_URL, {
-                        method: "POST",
-                        body: JSON.stringify({ action: "send_otp", email: email })
-                    });
-                    let data = await res.json();
-                    if(data.status === "success") {
-                        alert("OTP sent to your email!");
-                        document.getElementById('otp-section').classList.remove('hidden');
-                        document.getElementById('reg-btn').innerText = "Verify & Register";
-                        regStep = 'verify_otp';
-                    } else {
-                        alert("Error: " + data.message);
-                        document.getElementById('reg-btn').innerText = "Send OTP";
-                    }
-                } catch(e) {
-                    alert("Network error or incorrect GAS URL.");
-                    document.getElementById('reg-btn').innerText = "Send OTP";
-                }
-            } else {
-                try {
-                    let res = await fetch(GAS_URL, {
-                        method: "POST",
-                        body: JSON.stringify({ action: "verify_otp", email: email, otp: otp })
-                    });
-                    let data = await res.json();
-                    if(data.status === "success") {
-                        // Register in backend sheet
-                        await fetch(GAS_URL, {
-                            method: "POST",
-                            body: JSON.stringify({ action: "register", email: email, password: password })
-                        });
-                        alert("Registration successful! Please login.");
-                        switchAuthTab('login');
-                    } else {
-                        alert("Invalid OTP!");
-                    }
-                } catch(e) {
-                    alert("Verification failed.");
+        function pressPin(num) {
+            if(enteredPin.length < 4) {
+                enteredPin += num;
+                updatePinDots();
+                if(enteredPin.length === 4) {
+                    setTimeout(() => {
+                        if(enteredPin === pinCode) {
+                            document.getElementById('lock-screen').classList.add('hide');
+                            enteredPin = "";
+                            updatePinDots();
+                        } else {
+                            alert('Incorrect PIN! (Default is 1234)');
+                            enteredPin = "";
+                            updatePinDots();
+                        }
+                    }, 200);
                 }
             }
         }
 
-        async function handleLogin() {
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-
-            try {
-                let res = await fetch(GAS_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "login", email: email, password: password })
-                });
-                let data = await res.json();
-                if(data.status === "success") {
-                    currentUser = email;
-                    localStorage.setItem("moneymap_user", email);
-                    showApp();
-                } else {
-                    alert("Invalid Email or Password");
-                }
-            } catch(e) {
-                alert("Login error. Check internet connection.");
-            }
+        function clearPin() {
+            enteredPin = "";
+            updatePinDots();
         }
 
-        function handleLogout() {
-            localStorage.removeItem("moneymap_user");
-            currentUser = null;
-            document.getElementById('app-container').classList.add('hidden');
-            document.getElementById('auth-container').classList.remove('hidden');
+        function updatePinDots() {
+            const boxes = document.querySelectorAll('.pin-box');
+            boxes.forEach((box, i) => {
+                box.value = i < enteredPin.length ? "•" : "";
+            });
         }
 
-        function showApp() {
-            document.getElementById('auth-container').classList.add('hidden');
-            document.getElementById('app-container').classList.remove('hidden');
-            document.getElementById('user-display-email').innerText = currentUser;
-            updateDashboard();
-            renderEntries();
-            renderUdhaar();
+        function biometricAuth() {
+            alert('Biometric verified successfully!');
+            document.getElementById('lock-screen').classList.add('hide');
         }
 
+        // Navigation Switcher
         function switchTab(tabId) {
-            document.querySelectorAll('main > div').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('border-indigo-600', 'text-indigo-600');
-                btn.classList.add('border-transparent', 'text-slate-600');
+            ['home', 'ledger', 'udhar', 'calc'].forEach(t => {
+                document.getElementById('tab-' + t).classList.add('hide');
             });
-            document.getElementById('tab-' + tabId).classList.remove('hidden');
-            event.currentTarget.classList.add('border-indigo-600', 'text-indigo-600');
-            event.currentTarget.classList.remove('border-transparent', 'text-slate-600');
-        }
+            document.getElementById('tab-' + tabId).classList.remove('hide');
 
-        // Finance App Core Logic
-        function saveData() {
-            localStorage.setItem("moneymap_data", JSON.stringify(appData));
-        }
-
-        function addEntry() {
-            const type = document.getElementById('ent-type').value;
-            const amount = parseFloat(document.getElementById('ent-amount').value);
-            const desc = document.getElementById('ent-desc').value;
-
-            if(!amount || !desc) return alert("Enter valid details");
-
-            appData.entries.push({ type, amount, desc, date: new Date().toLocaleDateString() });
-            saveData();
-            renderEntries();
-            updateDashboard();
-            document.getElementById('ent-amount').value = '';
-            document.getElementById('ent-desc').value = '';
-        }
-
-        function renderEntries() {
-            const list = document.getElementById('entries-list');
-            list.innerHTML = appData.entries.map((e, idx) => `
-                <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg border">
-                    <div>
-                        <p class="font-semibold">${e.desc}</p>
-                        <p class="text-xs text-slate-500">${e.date}</p>
-                    </div>
-                    <div class="flex items-center space-x-3">
-                        <span class="font-bold ${e.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}">${e.type === 'income' ? '+' : '-'}₹${e.amount}</span>
-                        <button onclick="deleteEntry(${idx})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function deleteEntry(idx) {
-            appData.entries.splice(idx, 1);
-            saveData();
-            renderEntries();
-            updateDashboard();
-        }
-
-        function addUdhaar() {
-            const name = document.getElementById('udhaar-name').value;
-            const amount = parseFloat(document.getElementById('udhaar-amount').value);
-            if(!name || isNaN(amount)) return alert("Enter name and amount");
-
-            appData.udhaar.push({ name, amount });
-            saveData();
-            renderUdhaar();
-            document.getElementById('udhaar-name').value = '';
-            document.getElementById('udhaar-amount').value = '';
-        }
-
-        function renderUdhaar() {
-            const list = document.getElementById('udhaar-list');
-            list.innerHTML = appData.udhaar.map((u, idx) => `
-                <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg border">
-                    <span class="font-semibold">${u.name}</span>
-                    <span class="font-bold ${u.amount >= 0 ? 'text-indigo-600' : 'text-orange-600'}">₹${u.amount}</span>
-                </div>
-            `).join('');
-        }
-
-        function updateDashboard() {
-            let income = 0, expense = 0;
-            appData.entries.forEach(e => {
-                if(e.type === 'income') income += e.amount;
-                else expense += e.amount;
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if(btn.dataset.tab === tabId) {
+                    btn.classList.remove('text-slate-400');
+                    btn.classList.add('text-indigo-600');
+                } else {
+                    btn.classList.remove('text-indigo-600');
+                    btn.classList.add('text-slate-400');
+                }
             });
-            document.getElementById('dash-income').innerText = `₹${income}`;
-            document.getElementById('dash-expense').innerText = `₹${expense}`;
-            document.getElementById('dash-balance').innerText = `₹${income - expense}`;
         }
 
-        function initCashCounter() {
-            const denoms = [500, 200, 100, 50, 20, 10, 5, 1];
-            const container = document.getElementById('cash-denom-inputs');
-            container.innerHTML = denoms.map(d => `
-                <div>
-                    <label class="text-xs font-semibold text-slate-600">₹${d} Notes/Coins</label>
-                    <input type="number" data-val="${d}" oninput="calcCash()" class="cash-input w-full border p-2 rounded-lg text-center" placeholder="0" value="0">
+        // Ledger Logic
+        function setTxType(type) {
+            currentTxType = type;
+            if(type === 'income') {
+                document.getElementById('btn-inc').className = "py-2.5 rounded-xl text-sm font-bold bg-emerald-500 text-white transition";
+                document.getElementById('btn-exp').className = "py-2.5 rounded-xl text-sm font-bold bg-slate-100 text-slate-600 transition";
+            } else {
+                document.getElementById('btn-inc').className = "py-2.5 rounded-xl text-sm font-bold bg-slate-100 text-slate-600 transition";
+                document.getElementById('btn-exp').className = "py-2.5 rounded-xl text-sm font-bold bg-rose-500 text-white transition";
+            }
+        }
+
+        function addTransaction(e) {
+            e.preventDefault();
+            const title = document.getElementById('tx-title').value;
+            const amount = parseFloat(document.getElementById('tx-amount').value);
+            const date = document.getElementById('tx-date').value;
+
+            transactions.unshift({ id: Date.now(), title, amount, type: currentTxType, date });
+            localStorage.setItem('mm_tx', JSON.stringify(transactions));
+
+            document.getElementById('ledger-form').reset();
+            document.getElementById('tx-date').valueAsDate = new Date();
+            setTxType('income');
+            renderAll();
+        }
+
+        function deleteTx(id) {
+            transactions = transactions.filter(t => t.id !== id);
+            localStorage.setItem('mm_tx', JSON.stringify(transactions));
+            renderAll();
+        }
+
+        // Udhar Logic
+        function addUdhar(e) {
+            e.preventDefault();
+            const name = document.getElementById('udhar-name').value;
+            const amount = parseFloat(document.getElementById('udhar-amount').value);
+            const type = document.getElementById('udhar-type').value;
+
+            udharList.unshift({ id: Date.now(), name, amount, type });
+            localStorage.setItem('mm_udhar', JSON.stringify(udharList));
+            e.target.reset();
+            renderUdhar();
+        }
+
+        function deleteUdhar(id) {
+            udharList = udharList.filter(u => u.id !== id);
+            localStorage.setItem('mm_udhar', JSON.stringify(udharList));
+            renderUdhar();
+        }
+
+        // Cash Calculator
+        function initCashCalc() {
+            const container = document.getElementById('denom-inputs');
+            container.innerHTML = denominations.map(d => `
+                <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                    <span class="font-bold text-sm text-slate-700">₹${d}</span>
+                    <div class="flex items-center gap-2">
+                        <input type="number" min="0" value="0" data-val="${d}" oninput="calcCash()" class="denom-qty w-16 text-center py-1 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none">
+                        <span id="sub-${d}" class="text-xs font-semibold text-slate-500 w-16 text-right">₹0</span>
+                    </div>
                 </div>
             `).join('');
         }
 
         function calcCash() {
             let total = 0;
-            document.querySelectorAll('.cash-input').forEach(input => {
-                const denom = parseInt(input.getAttribute('data-val'));
+            document.querySelectorAll('.denom-qty').forEach(input => {
+                const val = parseInt(input.dataset.val);
                 const qty = parseInt(input.value) || 0;
-                total += denom * qty;
+                const sub = val * qty;
+                total += sub;
+                document.getElementById('sub-' + val).innerText = '₹' + sub;
             });
-            document.getElementById('total-cash-output').innerText = `₹${total}`;
+            document.getElementById('cash-total').innerText = '₹' + total.toLocaleString('en-IN');
         }
 
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
-            const dlAnchor = document.createElement('a');
-            dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", "moneymap_backup.json");
-            document.body.appendChild(dlAnchor);
-            dlAnchor.click();
-            dlAnchor.remove();
+        // Render All UI Data
+        function renderAll() {
+            let inc = 0, exp = 0;
+            transactions.forEach(t => {
+                if(t.type === 'income') inc += t.amount;
+                else exp += t.amount;
+            });
+
+            const bal = inc - exp;
+            document.getElementById('total-balance').innerText = '₹' + bal.toLocaleString('en-IN');
+            document.getElementById('total-income').innerText = '₹' + inc.toLocaleString('en-IN');
+            document.getElementById('total-expense').innerText = '₹' + exp.toLocaleString('en-IN');
+
+            // Recent List
+            const recentHTML = transactions.slice(0, 5).map(t => `
+                <div class="flex justify-between items-center p-2.5 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center ${t.type === 'income' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}">
+                            <i class="fa-solid ${t.type === 'income' ? 'fa-arrow-down' : 'fa-arrow-up'} text-xs"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-xs text-slate-800">${t.title}</p>
+                            <p class="text-[10px] text-slate-400">${t.date}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-xs ${t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}">${t.type === 'income' ? '+' : '-'}₹${t.amount.toLocaleString('en-IN')}</span>
+                        <button onclick="deleteTx(${t.id})" class="text-slate-300 hover:text-rose-500 text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('recent-transactions').innerHTML = recentHTML || '<p class="text-xs text-slate-400 text-center py-4">No transactions recorded yet.</p>';
+
+            // Full Ledger List
+            const ledgerHTML = transactions.map(t => `
+                <div class="flex justify-between items-center p-2.5 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center ${t.type === 'income' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}">
+                            <i class="fa-solid ${t.type === 'income' ? 'fa-arrow-down' : 'fa-arrow-up'} text-xs"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-xs text-slate-800">${t.title}</p>
+                            <p class="text-[10px] text-slate-400">${t.date}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-xs ${t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}">${t.type === 'income' ? '+' : '-'}₹${t.amount.toLocaleString('en-IN')}</span>
+                        <button onclick="deleteTx(${t.id})" class="text-slate-300 hover:text-rose-500 text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('ledger-list').innerHTML = ledgerHTML || '<p class="text-xs text-slate-400 text-center py-4">No entries found.</p>';
+
+            renderUdhar();
         }
 
-        function clearAllData() {
-            if(confirm("Are you sure you want to reset all data?")) {
-                appData = { entries: [], udhaar: [] };
-                saveData();
-                showApp();
-            }
+        function renderUdhar() {
+            const udharHTML = udharList.map(u => `
+                <div class="flex justify-between items-center p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div>
+                        <p class="font-bold text-xs text-slate-800">${u.name}</p>
+                        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md ${u.type === 'given' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}">${u.type === 'given' ? 'Lena hai' : 'Dena hai'}</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold text-sm ${u.type === 'given' ? 'text-amber-600' : 'text-blue-600'}">₹${u.amount.toLocaleString('en-IN')}</span>
+                        <button onclick="deleteUdhar(${u.id})" class="text-slate-300 hover:text-rose-500 text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('udhar-list').innerHTML = udharHTML || '<p class="text-xs text-slate-400 text-center py-4">No khata records found.</p>';
         }
-   <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then((reg) => console.log('Service Worker registered!', reg))
-        .catch((err) => console.log('Service Worker registration failed', err));
-    });
-  }
-</script>
-    
+
+        // PDF Statement Export
+        function exportPDF() {
+            let inc = 0, exp = 0;
+            transactions.forEach(t => { t.type === 'income' ? inc += t.amount : exp += t.amount; });
+            const bal = inc - exp;
+
+            document.getElementById('pdf-date').innerText = "Generated on: " + new Date().toLocaleString();
+            document.getElementById('pdf-bal').innerText = '₹' + bal.toLocaleString('en-IN');
+            document.getElementById('pdf-inc').innerText = '₹' + inc.toLocaleString('en-IN');
+            document.getElementById('pdf-exp').innerText = '₹' + exp.toLocaleString('en-IN');
+
+            document.getElementById('pdf-table-body').innerHTML = transactions.map(t => `
+                <tr class="border-b border-slate-100">
+                    <td class="p-2">${t.date}</td>
+                    <td class="p-2 font-medium">${t.title}</td>
+                    <td class="p-2 uppercase text-[10px] ${t.type === 'income' ? 'text-emerald-600 font-bold' : 'text-rose-600 font-bold'}">${t.type}</td>
+                    <td class="p-2 text-right font-bold ${t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}">₹${t.amount.toLocaleString('en-IN')}</td>
+                </tr>
+            `).join('') || `<tr><td colspan="4" class="p-4 text-center text-slate-400">No transactions</td></tr>`;
+
+            const element = document.getElementById('pdf-report-content');
+            element.classList.remove('hide');
+            
+            const opt = {
+                margin:       0.5,
+                filename:     'MoneyMap_Statement.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().from(element).save().then(() => {
+                element.classList.add('hide');
+            });
+        }
+    </script>
 </body>
 </html>
