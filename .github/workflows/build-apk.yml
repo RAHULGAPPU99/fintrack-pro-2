@@ -26,7 +26,6 @@ jobs:
         run: |
           mkdir www
           cp index.html www/
-          # Agar aapke paas icon files hain toh unhe bhi copy kar lein
           if [ -f icon-192.png ]; then cp icon-192.png www/; fi
           if [ -f icon-512.png ]; then cp icon-512.png www/; fi
 
@@ -38,13 +37,17 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      - name: Configure Gradle Properties
+        run: |
+          echo "org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8" >> android/gradle.properties
+
       - name: Build Debug APK with Gradle
         working-directory: ./android
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew clean assembleDebug --no-daemon
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
