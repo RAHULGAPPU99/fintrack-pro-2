@@ -22,12 +22,21 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Prepare Web Assets Folder
+        run: |
+          mkdir www
+          cp index.html www/
+          # Agar aapke paas icon files hain toh unhe bhi copy kar lein
+          if [ -f icon-192.png ]; then cp icon-192.png www/; fi
+          if [ -f icon-512.png ]; then cp icon-512.png www/; fi
+
       - name: Build Web App Wrapper (Capacitor Web Assets)
         run: |
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init MoneyMap com.moneymap.app --web-dir .
+          npx cap init MoneyMap com.moneymap.app --web-dir www
           npx cap add android
+          npx cap sync android
 
       - name: Build Debug APK with Gradle
         working-directory: ./android
