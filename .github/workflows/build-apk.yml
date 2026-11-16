@@ -1,51 +1,181 @@
-name: Build Android APK
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MoneyMap Pro - Secure Finance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body { user-select: none; -webkit-tap-highlight-color: transparent; background-color: #0f172a; font-family: system-ui, -apple-system, sans-serif; }
+        .hide { display: none !important; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade { animation: fadeIn 0.2s ease-out forwards; }
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased max-w-md mx-auto min-h-screen bg-slate-50 flex flex-col relative shadow-2xl overflow-x-hidden">
 
-on:
-  push:
-    branches: [ "main", "master" ]
+    <!-- STRICT AUTH & LOGIN SCREEN -->
+    <div id="auth-screen" class="absolute inset-0 bg-gradient-to-br from-indigo-950 via-indigo-900 to-slate-950 z-50 flex flex-col justify-between p-6 text-white animate-fade">
+        <div class="mt-10 text-center">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-indigo-600/30 rounded-3xl backdrop-blur-xl mb-4 border border-indigo-400/30 shadow-2xl">
+                <i class="fa-solid fa-shield-halved text-4xl text-indigo-400"></i>
+            </div>
+            <h1 class="text-3xl font-extrabold tracking-tight">MoneyMap Pro</h1>
+            <p class="text-indigo-300 text-xs mt-1 uppercase tracking-wider font-semibold">Strict Secure Access</p>
+        </div>
+        <div class="bg-white/10 backdrop-blur-2xl p-6 rounded-3xl border border-white/15 shadow-2xl mb-6 space-y-3">
+            <div>
+                <label class="block text-xs font-semibold text-indigo-200 mb-1 uppercase tracking-wider">Full Name</label>
+                <input type="text" id="reg-name" placeholder="Enter your full name" class="w-full px-4 py-3 bg-black/30 border border-white/25 rounded-xl text-white placeholder-indigo-300/40 text-xs font-medium focus:outline-none focus:border-indigo-400">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-indigo-200 mb-1 uppercase tracking-wider">Set 4-Digit Secure PIN</label>
+                <input type="password" id="reg-pin" maxlength="4" placeholder="••••" class="w-full px-4 py-3 bg-black/30 border border-white/25 rounded-xl text-white placeholder-indigo-300/40 text-center text-lg tracking-widest focus:outline-none focus:border-indigo-400">
+            </div>
+            <button onclick="registerUser()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg transition text-xs uppercase tracking-wider">Verify & Register</button>
+        </div>
+    </div>
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+    <!-- LOCK SCREEN -->
+    <div id="lock-screen" class="absolute inset-0 bg-slate-950 z-40 flex flex-col items-center justify-center p-6 text-white hide animate-fade">
+        <div class="w-16 h-16 bg-indigo-600/20 rounded-2xl flex items-center justify-center mb-4 border border-indigo-500/30">
+            <i class="fa-solid fa-lock text-3xl text-indigo-400"></i>
+        </div>
+        <h2 class="text-xl font-bold">App Locked</h2>
+        <p class="text-slate-400 text-xs mb-6 font-medium">Enter your strict 4-digit PIN</p>
+        <div class="flex gap-4 mb-8">
+            <input type="password" maxlength="1" class="pin-box w-12 h-12 text-center text-2xl bg-slate-900 border border-slate-700 rounded-2xl text-white" readonly>
+            <input type="password" maxlength="1" class="pin-box w-12 h-12 text-center text-2xl bg-slate-900 border border-slate-700 rounded-2xl text-white" readonly>
+            <input type="password" maxlength="1" class="pin-box w-12 h-12 text-center text-2xl bg-slate-900 border border-slate-700 rounded-2xl text-white" readonly>
+            <input type="password" maxlength="1" class="pin-box w-12 h-12 text-center text-2xl bg-slate-900 border border-slate-700 rounded-2xl text-white" readonly>
+        </div>
+        <div class="grid grid-cols-3 gap-3.5 w-64">
+            <button onclick="pressPin('1')" class="py-3 bg-slate-900 hover:bg-slate-800 rounded-xl font-bold border border-slate-800">1</button>
+            <button onclick="pressPin('2')" class="py-3 bg-slate-900 hover:bg-slate-800 rounded-xl font-bold border border-slate-800">2</button>
+            <button onclick="pressPin('3')" class="py-3 bg-slate-900 hover:bg-slate-800 rounded-xl font-bold border border-slate-800">3</button>
+            <button onclick="pressPin('4')" class="py-3 bg-slate-900 hover:bg-slate-800 rounded-xl font-bold border border-slate-800">4</button>
+            <button onclick="pressPin('5')" class="py-3 bg-slate-900 hover:bg-slate-800 rounded-xl font-bold border border-slate-800">5</button>
+            <button onclick="pressPin('6')" class="py-3 bg-slate-900 hover:bg-slate-800 rounded-xl font-bold border border-slate-800">6</button>
+            <button onclick="pressPin('7')" class="py-3 bg-slate-900 hover:bg-slate-800 rounded-xl font-bold border border-slate-800">7</button>
+            <button onclick="pressPin('8')" class="py-3 bg-slate-900 hover:bg-slate-800 rounded-xl font-bold border border-slate-800">8</button>
+            <button onclick="pressPin('9')" class="py-3 bg-slate-900 hover:bg-slate-800 rounded-xl font-bold border border-slate-800">9</button>
+            <button onclick="clearPin()" class="py-3 bg-slate-900 hover:bg-slate-800 rounded-xl text-rose-400 border border-slate-800 text-xs font-bold">Clear</button>
+            <button onclick="pressPin('0')" class="py-3 bg-slate-900 hover:bg-slate-800 rounded-xl font-bold border border-slate-800">0</button>
+            <button onclick="lockApp()" class="py-3 bg-slate-900 hover:bg-slate-800 rounded-xl text-indigo-400 border border-slate-800 text-xs font-bold"><i class="fa-solid fa-rotate-right"></i></button>
+        </div>
+    </div>
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+    <!-- HEADER -->
+    <header class="bg-indigo-600 text-white p-4 pt-6 shadow-lg flex justify-between items-center rounded-b-3xl">
+        <div class="flex items-center gap-3">
+            <div id="user-avatar" class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center font-bold text-white text-sm">U</div>
+            <div>
+                <span class="text-[9px] text-indigo-200 uppercase tracking-widest font-bold">MoneyMap Pro</span>
+                <h2 class="text-sm font-extrabold" id="header-name">Dashboard</h2>
+            </div>
+        </div>
+        <button onclick="lockApp()" class="w-8 h-8 bg-indigo-700/60 rounded-xl flex items-center justify-center text-indigo-100"><i class="fa-solid fa-lock text-xs"></i></button>
+    </header>
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v5
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+    <!-- CONTENT -->
+    <main class="flex-1 pb-24 overflow-y-auto p-4 space-y-4">
+        <section id="tab-home" class="space-y-4 animate-fade">
+            <div class="bg-gradient-to-br from-indigo-600 to-violet-800 p-5 rounded-3xl text-white shadow-xl">
+                <p class="text-[10px] text-indigo-200 font-bold uppercase">Net Balance</p>
+                <h3 id="total-balance" class="text-3xl font-extrabold mt-1">₹0.00</h3>
+                <div class="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-white/15">
+                    <div class="bg-black/10 p-2.5 rounded-2xl">
+                        <span class="text-[10px] text-emerald-300 font-semibold uppercase">Income</span>
+                        <p id="total-income" class="text-sm font-extrabold">₹0</p>
+                    </div>
+                    <div class="bg-black/10 p-2.5 rounded-2xl">
+                        <span class="text-[10px] text-rose-300 font-semibold uppercase">Expense</span>
+                        <p id="total-expense" class="text-sm font-extrabold">₹0</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
 
-      - name: Clean & Prepare Web Assets
-        run: |
-          rm -rf www
-          mkdir -p www
-          cp index.html www/
+    <!-- NAV -->
+    <nav class="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-4 py-2.5 flex justify-around items-center z-30 shadow-2xl rounded-t-3xl">
+        <button onclick="switchTab('home')" class="nav-btn flex flex-col items-center text-indigo-600" data-tab="home"><i class="fa-solid fa-house text-base"></i><span class="text-[9px] font-bold mt-1">Home</span></button>
+    </nav>
 
-      - name: Build Web App Wrapper (Capacitor)
-        run: |
-          npm init -y
-          npm install @capacitor/core@5 @capacitor/cli@5 @capacitor/android@5
-          npx cap init MoneyMap com.moneymap.app --web-dir www
-          npx cap add android
-          npx cap sync android
+    <script>
+        let enteredPin = "";
+        let userData = JSON.parse(localStorage.getItem('mm_user')) || null;
+        let transactions = JSON.parse(localStorage.getItem('mm_tx')) || [];
 
-      - name: Build Fresh Clean APK with Gradle
-        working-directory: ./android
-        env:
-          ANDROID_HOME: /usr/local/lib/android/sdk
-        run: |
-          chmod +x gradlew
-          ./gradlew clean assembleDebug --no-daemon
+        window.onload = function() {
+            if (!userData || !userData.pin) {
+                document.getElementById('auth-screen').classList.remove('hide');
+            } else {
+                document.getElementById('auth-screen').classList.add('hide');
+                document.getElementById('lock-screen').classList.remove('hide');
+                document.getElementById('header-name').innerText = userData.name;
+                document.getElementById('user-avatar').innerText = userData.name.charAt(0).toUpperCase();
+            }
+            renderAll();
+        };
 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+        function registerUser() {
+            const name = document.getElementById('reg-name').value.trim();
+            const pin = document.getElementById('reg-pin').value.trim();
+            if(!name || pin.length !== 4 || isNaN(pin)) {
+                alert('Strict Validation Error: Please enter a valid name and exactly 4-digit numeric PIN.');
+                return;
+            }
+            userData = { name, pin };
+            localStorage.setItem('mm_user', JSON.stringify(userData));
+            document.getElementById('auth-screen').classList.add('hide');
+            document.getElementById('header-name').innerText = name;
+            document.getElementById('user-avatar').innerText = name.charAt(0).toUpperCase();
+            renderAll();
+        }
+
+        function lockApp() {
+            document.getElementById('lock-screen').classList.remove('hide');
+            enteredPin = "";
+            updatePinDots();
+        }
+
+        function pressPin(num) {
+            if(enteredPin.length < 4) {
+                enteredPin += num;
+                updatePinDots();
+                if(enteredPin.length === 4) {
+                    setTimeout(() => {
+                        if(userData && enteredPin === userData.pin) {
+                            document.getElementById('lock-screen').classList.add('hide');
+                            enteredPin = "";
+                            updatePinDots();
+                        } else {
+                            alert('Incorrect PIN! Access Denied.');
+                            enteredPin = "";
+                            updatePinDots();
+                        }
+                    }, 150);
+                }
+            }
+        }
+
+        function clearPin() { enteredPin = ""; updatePinDots(); }
+        function updatePinDots() {
+            document.querySelectorAll('.pin-box').forEach((box, i) => { box.value = i < enteredPin.length ? "•" : ""; });
+        }
+
+        function renderAll() {
+            let inc = 0, exp = 0;
+            transactions.forEach(t => { if(t.type === 'income') inc += t.amount; else exp += t.amount; });
+            document.getElementById('total-balance').innerText = '₹' + (inc - exp).toLocaleString('en-IN');
+            document.getElementById('total-income').innerText = '₹' + inc.toLocaleString('en-IN');
+            document.getElementById('total-expense').innerText = '₹' + exp.toLocaleString('en-IN');
+        }
+    </script>
+</body>
+</html>
