@@ -17,13 +17,14 @@ jobs:
           node-version: '20'
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Prepare Web Assets Folder
+      - name: Clean & Prepare Web Assets
         run: |
+          rm -rf www
           mkdir -p www
           cp index.html www/
 
@@ -35,13 +36,13 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      - name: Build Debug APK with Gradle
+      - name: Build Fresh Clean APK with Gradle
         working-directory: ./android
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew clean assembleDebug --no-daemon
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
